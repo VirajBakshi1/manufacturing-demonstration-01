@@ -1,9 +1,32 @@
 @import "tailwindcss";
 
+/* ===============================
+   Base
+   =============================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+/* ===============================
+   Entrance animations
+   =============================== */
+
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -12,7 +35,7 @@
 }
 
 .animate-slide-up {
-  animation: slide-up 600ms ease-out forwards;
+  animation: slide-up 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes fade-in {
@@ -25,8 +48,81 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 600ms ease-out forwards;
+  animation: fade-in 700ms ease-out both;
 }
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Slow cinematic zoom for hero slides */
+@keyframes ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.animate-ken-burns {
+  animation: ken-burns 9s ease-out forwards;
+}
+
+/* Hero slide progress bar */
+@keyframes slide-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-slide-progress {
+  animation: slide-progress 7s linear forwards;
+}
+
+/* Soft floating accent */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+
+/* Scroll-down hint */
+@keyframes scroll-hint {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translateY(8px);
+  }
+}
+
+.animate-scroll-hint {
+  animation: scroll-hint 2.2s ease-in-out infinite;
+}
+
 /* ===============================
    Seamless Partner Logo Marquee
    =============================== */
@@ -34,6 +130,20 @@
 .marquee {
   width: 100%;
   overflow: hidden;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
 }
 
 .marquee__track {
@@ -52,15 +162,64 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4rem;
+  padding: 0 3rem;
 }
 
-/* Animation */
+@media (min-width: 768px) {
+  .marquee__item {
+    padding: 0 4rem;
+  }
+}
+
 @keyframes marquee-scroll {
   from {
     transform: translateX(0);
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* ===============================
+   Thin custom scrollbar (Q&A panel)
+   =============================== */
+
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #bfdbfe transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #bfdbfe;
+  border-radius: 9999px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #93c5fd;
+}
+
+/* ===============================
+   Reduced motion
+   =============================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

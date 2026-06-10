@@ -1,6 +1,6 @@
-'use client'
-
 import Image from 'next/image'
+import Link from 'next/link'
+import Reveal from '@/components/Reveal'
 
 const logos = [
   { name: 'Oracle', src: '/images/services/applications/oracle.png' },
@@ -13,31 +13,33 @@ const logos = [
 
 export default function PartnersCarousel() {
   return (
-    <section className="bg-blue-100/20 py-28 overflow-hidden">
+    <section className="overflow-hidden bg-white py-24 md:py-28">
       <div className="mx-auto max-w-7xl px-6">
         {/* Header */}
-        <span className="mb-3 inline-block text-sm font-medium text-blue-600">
-          Our partners
-        </span>
+        <Reveal>
+          <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-widest text-blue-600">
+            Our partners
+          </span>
 
-        <h2 className="mb-6 max-w-4xl text-4xl font-light text-gray-900">
-          Global alliance partnerships enable our customers&apos; complex hybrid IT ecosystems
-        </h2>
+          <h2 className="mb-6 max-w-4xl text-3xl font-light text-gray-900 md:text-4xl">
+            Global alliance partnerships enable our customers&apos; complex
+            hybrid IT ecosystems
+          </h2>
 
-        <a
-          href="#"
-          className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-        >
-          Learn more about our alliance partners →
-        </a>
+          <Link
+            href="/about/alliances"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
+          >
+            Learn more about our alliance partners
+            <span className="transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </Link>
+        </Reveal>
       </div>
 
       {/* Carousel */}
-      <div className="relative mt-24">
-        {/* Fade edges */}
-        <div className="pointer-events-none absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-white to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white to-transparent z-10" />
-
+      <div className="relative mt-16 md:mt-20">
         <div className="marquee">
           <div className="marquee__track">
             {[...logos, ...logos].map((logo, i) => (
@@ -47,15 +49,13 @@ export default function PartnersCarousel() {
                   alt={logo.name}
                   width={140}
                   height={60}
-                  className="opacity-60 grayscale transition hover:opacity-100 hover:grayscale-0"
+                  className="opacity-50 grayscale transition-all duration-500 hover:scale-110 hover:opacity-100 hover:grayscale-0"
                 />
               </div>
             ))}
           </div>
         </div>
       </div>
-
-      <hr className="mx-auto mt-28 max-w-7xl border-gray-200" />
     </section>
   )
 }

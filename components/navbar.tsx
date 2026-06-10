@@ -42,6 +42,7 @@ export default function Navbar({
   const [desktopMenu, setDesktopMenu] = useState<string | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileAccordion, setMobileAccordion] = useState<string | null>(null)
+  const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLDivElement>(null)
 
   /* Outside click */
@@ -70,28 +71,49 @@ export default function Navbar({
     return () => document.removeEventListener('keydown', onKey)
   }, [])
 
+  /* Elevation on scroll */
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const closeAll = () => {
+    setDesktopMenu(null)
+    setMobileOpen(false)
+    setMobileAccordion(null)
+  }
+
   return (
     <>
       {/* Backdrop overlay (desktop mega menu) */}
       {desktopMenu && (
-        <div className="fixed inset-0 z-40 hidden bg-black/10 backdrop-blur-sm md:block" />
+        <div className="fixed inset-0 z-40 hidden bg-slate-900/30 backdrop-blur-sm md:block animate-fade-in" />
       )}
 
       <header
         ref={navRef}
-        className="sticky top-0 z-50 border-b bg-white"
+        className={clsx(
+          'sticky top-0 z-50 border-b transition-all duration-300',
+          scrolled || desktopMenu
+            ? 'border-gray-200 bg-white/90 shadow-[0_4px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-md'
+            : 'border-transparent bg-white'
+        )}
       >
         {/* ---------------- TOP BAR ---------------- */}
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link
             href="/"
-            className="text-xl font-semibold text-blue-700"
+            onClick={closeAll}
+            className="text-xl font-bold tracking-tight text-blue-700 transition-colors hover:text-blue-800"
           >
-            {brand}
+            {brand.slice(0, 4)}
+            <span className="text-gray-900">{brand.slice(4)}</span>
           </Link>
 
           {/* Desktop Nav */}
-          <ul className="hidden md:flex items-center gap-8">
+          <ul className="hidden items-center gap-7 md:flex lg:gap-9">
             {links.map((item) => (
               <li key={item.label}>
                 {item.mega ? (
@@ -102,7 +124,7 @@ export default function Navbar({
                       )
                     }
                     className={clsx(
-                      'group flex items-center gap-1 text-sm font-medium transition-colors',
+                      'group relative flex items-center gap-1 py-1 text-sm font-medium transition-colors',
                       desktopMenu === item.label
                         ? 'text-blue-700'
                         : 'text-gray-700 hover:text-blue-700'
@@ -124,25 +146,43 @@ export default function Navbar({
                     </svg>
 
                     {/* Hover underline */}
-                    <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-blue-700 transition-all duration-300 group-hover:w-full" />
+                    <span
+                      className={clsx(
+                        'absolute -bottom-1 left-0 h-0.5 bg-blue-700 transition-all duration-300',
+                        desktopMenu === item.label
+                          ? 'w-full'
+                          : 'w-0 group-hover:w-full'
+                      )}
+                    />
                   </button>
                 ) : (
                   <Link
                     href={item.href!}
-                    className="relative text-sm font-medium text-gray-700 hover:text-blue-700"
+                    onClick={closeAll}
+                    className="group relative py-1 text-sm font-medium text-gray-700 transition-colors hover:text-blue-700"
                   >
                     {item.label}
+                    <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-blue-700 transition-all duration-300 group-hover:w-full" />
                   </Link>
                 )}
               </li>
             ))}
           </ul>
 
+          {/* Desktop CTA */}
+          <Link
+            href="/contact"
+            onClick={closeAll}
+            className="hidden rounded-full bg-blue-700 px-5 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg hover:shadow-blue-700/25 md:inline-block"
+          >
+            Contact us
+          </Link>
+
           {/* Mobile Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden rounded-md p-2 text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-            aria-label="Open menu"
+            className="rounded-md p-2 text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 md:hidden"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           >
             <svg
               className="h-6 w-6"
@@ -162,51 +202,52 @@ export default function Navbar({
 
         {/* ---------------- DESKTOP MEGA MENU ---------------- */}
         {desktopMenu && (
-            <div
-  className={clsx(
-    'absolute left-1/2 top-full z-50 w-screen -translate-x-1/2 border-t bg-white shadow-lg hidden md:block',
-    desktopMenu ? 'animate-mega-open pointer-events-auto' : 'animate-mega-closed pointer-events-none'
-  )}
->
-               {links
+          <div className="animate-mega-open absolute left-1/2 top-full z-50 hidden w-screen -translate-x-1/2 border-t border-gray-100 bg-white shadow-2xl md:block">
+            {links
               .filter((l) => l.label === desktopMenu && l.mega)
               .map((item) => {
                 const mega = item.mega!
                 return (
                   <div
                     key={item.label}
-                    className="mx-auto max-w-7xl px-6 py-10 grid grid-cols-12 gap-10"
+                    className="mx-auto grid max-w-7xl grid-cols-12 gap-10 px-6 py-12"
                   >
                     {/* Intro */}
-                    <div className="col-span-3 border-r pr-6">
-                      <h3 className="mb-4 text-xl font-medium text-gray-900">
+                    <div className="col-span-3 border-r border-gray-100 pr-8">
+                      <h3 className="mb-5 text-xl font-medium leading-snug text-gray-900">
                         {mega.intro.title}
                       </h3>
                       <ul className="space-y-4 text-sm text-gray-600">
                         {mega.intro.items.map((i) => (
-                          <li key={i}>{i}</li>
+                          <li key={i} className="flex gap-3">
+                            <span className="mt-2 h-1 w-4 shrink-0 rounded-full bg-blue-600" />
+                            {i}
+                          </li>
                         ))}
                       </ul>
                     </div>
 
                     {/* Links */}
                     <div className="col-span-6 grid grid-cols-2 gap-8">
-                      {mega.links.map((group) => (
-                        <div key={group.title}>
+                      {mega.links.map((group, gi) => (
+                        <div key={group.title || gi}>
                           {group.title && (
-                            <h4 className="mb-3 text-sm font-semibold text-gray-900">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
                               {group.title}
                             </h4>
                           )}
-                          <ul className="space-y-2">
+                          <ul className="space-y-1">
                             {group.items.map((l) => (
                               <li key={l.href}>
                                 <Link
                                   href={l.href}
-                                  onClick={() => setDesktopMenu(null)}
-                                  className="text-sm text-gray-700 hover:text-blue-700 transition-colors"
+                                  onClick={closeAll}
+                                  className="group flex items-center gap-2 rounded-md px-2 py-2 text-sm text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-700"
                                 >
                                   {l.label}
+                                  <span className="-translate-x-1 text-blue-600 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                                    →
+                                  </span>
                                 </Link>
                               </li>
                             ))}
@@ -217,25 +258,30 @@ export default function Navbar({
 
                     {/* Spotlight */}
                     {mega.spotlight && (
-                      <div className="col-span-3 border-l pl-6 space-y-6">
-                        <h4 className="text-lg font-medium text-gray-900">
+                      <div className="col-span-3 space-y-4 border-l border-gray-100 pl-8">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                           Spotlight
                         </h4>
                         {mega.spotlight.map((s) => (
-                          <div key={s.title}>
-                            <p className="font-medium text-gray-900">
+                          <Link
+                            key={s.title}
+                            href={s.href}
+                            onClick={closeAll}
+                            className="group block rounded-lg border border-gray-100 bg-gray-50/60 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/60 hover:shadow-md"
+                          >
+                            <p className="font-medium text-gray-900 transition-colors group-hover:text-blue-700">
                               {s.title}
                             </p>
                             <p className="mt-1 text-sm text-gray-600">
                               {s.description}
                             </p>
-                            <Link
-                              href={s.href}
-                              className="mt-2 inline-block text-sm font-medium text-blue-700 hover:underline"
-                            >
-                              Learn more →
-                            </Link>
-                          </div>
+                            <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-blue-700">
+                              Learn more
+                              <span className="transition-transform duration-300 group-hover:translate-x-1">
+                                →
+                              </span>
+                            </span>
+                          </Link>
                         ))}
                       </div>
                     )}
@@ -247,10 +293,10 @@ export default function Navbar({
 
         {/* ---------------- MOBILE ACCORDION MENU ---------------- */}
         {mobileOpen && (
-          <div className="md:hidden border-t bg-white px-4 py-6 animate-mobile">
-            <ul className="space-y-4">
+          <div className="animate-mobile max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-gray-100 bg-white px-4 py-6 md:hidden">
+            <ul className="space-y-2">
               {links.map((item) => (
-                <li key={item.label}>
+                <li key={item.label} className="border-b border-gray-100 pb-2 last:border-none">
                   {item.mega ? (
                     <>
                       <button
@@ -261,12 +307,12 @@ export default function Navbar({
                               : item.label
                           )
                         }
-                        className="flex w-full items-center justify-between text-sm font-medium text-blue-700"
+                        className="flex w-full items-center justify-between py-2 text-sm font-semibold text-gray-900"
                       >
                         {item.label}
                         <svg
                           className={clsx(
-                            'h-4 w-4 transition-transform duration-300',
+                            'h-4 w-4 text-blue-700 transition-transform duration-300',
                             mobileAccordion === item.label && 'rotate-180'
                           )}
                           fill="none"
@@ -282,27 +328,24 @@ export default function Navbar({
                         className={clsx(
                           'overflow-hidden transition-all duration-300',
                           mobileAccordion === item.label
-                            ? 'max-h-[500px] mt-4'
+                            ? 'mt-2 max-h-[600px]'
                             : 'max-h-0'
                         )}
                       >
-                        {item.mega.links.map((group) => (
-                          <div key={group.title} className="mb-4">
+                        {item.mega.links.map((group, gi) => (
+                          <div key={group.title || gi} className="mb-4">
                             {group.title && (
-                              <p className="mb-2 text-xs font-semibold uppercase text-gray-500">
+                              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                                 {group.title}
                               </p>
                             )}
-                            <ul className="space-y-2">
+                            <ul className="space-y-1">
                               {group.items.map((l) => (
                                 <li key={l.href}>
                                   <Link
                                     href={l.href}
-                                    onClick={() => {
-                                      setMobileOpen(false)
-                                      setMobileAccordion(null)
-                                    }}
-                                    className="block text-sm text-gray-700 hover:text-blue-700"
+                                    onClick={closeAll}
+                                    className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-700"
                                   >
                                     {l.label}
                                   </Link>
@@ -316,8 +359,8 @@ export default function Navbar({
                   ) : (
                     <Link
                       href={item.href!}
-                      onClick={() => setMobileOpen(false)}
-                      className="text-sm font-medium text-gray-700"
+                      onClick={closeAll}
+                      className="block py-2 text-sm font-semibold text-gray-900"
                     >
                       {item.label}
                     </Link>
@@ -325,59 +368,50 @@ export default function Navbar({
                 </li>
               ))}
             </ul>
+
+            <Link
+              href="/contact"
+              onClick={closeAll}
+              className="mt-6 block rounded-full bg-blue-700 px-5 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-blue-800"
+            >
+              Contact us
+            </Link>
           </div>
         )}
       </header>
 
       {/* ---------------- ANIMATIONS ---------------- */}
       <style jsx>{`
-  .animate-mega-open {
-    animation: megaSlideDown 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
+        .animate-mega-open {
+          animation: megaSlideDown 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
 
-  .animate-mega-closed {
-    animation: megaSlideUp 420ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
+        @keyframes megaSlideDown {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -24px);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
+        }
 
-  @keyframes megaSlideDown {
-    0% {
-      opacity: 0;
-      transform: translate(-50%, -48px);
-    }
-    100% {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-  }
+        .animate-mobile {
+          animation: mobileIn 260ms ease-out forwards;
+        }
 
-  @keyframes megaSlideUp {
-    0% {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-    100% {
-      opacity: 0;
-      transform: translate(-50%, -32px);
-    }
-  }
-
-  .animate-mobile {
-    animation: mobileIn 260ms ease-out forwards;
-  }
-
-  @keyframes mobileIn {
-    from {
-      opacity: 0;
-      transform: translateY(-12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`}</style>
-
-
+        @keyframes mobileIn {
+          from {
+            opacity: 0;
+            transform: translateY(-12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </>
   )
 }

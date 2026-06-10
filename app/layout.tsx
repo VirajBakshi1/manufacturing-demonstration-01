@@ -1,6 +1,23 @@
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: 'NovaCore | Manufacturing & Enterprise Technology Services',
+    template: '%s | NovaCore',
+  },
+  description:
+    'NovaCore helps manufacturers modernize IT and OT, scale AI with confidence, and build secure, resilient digital operations.',
+};
 
 
 const navLinks = [
@@ -228,14 +245,10 @@ const navLinks = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <Navbar
-        brand="NovaCore"
-        links={navLinks}
-      />
-      
-        {children}
+    <html lang="en" className={inter.variable}>
+      <body className={`${inter.className} bg-white text-gray-900`}>
+        <Navbar brand="NovaCore" links={navLinks} />
+        <main>{children}</main>
         <Footer />
       </body>
     </html>

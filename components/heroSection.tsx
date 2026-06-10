@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import clsx from 'clsx'
 
 /* ---------------- DATA ---------------- */
@@ -52,80 +53,170 @@ const sidePanels = [
   },
 ]
 
+const SLIDE_DURATION = 7000
+
 /* ---------------- COMPONENT ---------------- */
 
 export default function HeroSection() {
   const [current, setCurrent] = useState(0)
   const [openPanel, setOpenPanel] = useState<number | null>(0)
-  const interacted = useRef(false)
+  const [interacted, setInteracted] = useState(false)
 
   /* Auto slide */
   useEffect(() => {
-    if (interacted.current) return
+    if (interacted) return
 
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length)
-    }, 7000)
+    }, SLIDE_DURATION)
 
     return () => clearInterval(timer)
+  }, [interacted])
+
+  const goTo = useCallback((index: number) => {
+    setInteracted(true)
+    setCurrent((index + slides.length) % slides.length)
   }, [])
 
-  const next = () => {
-    interacted.current = true
-    setCurrent((c) => (c + 1) % slides.length)
-  }
-
-  const prev = () => {
-    interacted.current = true
-    setCurrent((c) => (c - 1 + slides.length) % slides.length)
-  }
-
   return (
-    <section className="relative h-[90vh] overflow-hidden">
+    <section className="relative overflow-hidden bg-slate-950 md:h-[90vh] md:min-h-[640px]">
       {/* ---------------- BACKGROUND SLIDES ---------------- */}
       {slides.map((slide, i) => (
         <div
           key={i}
           className={clsx(
-            'absolute inset-0 bg-cover bg-center transition-all duration-[1200ms] ease-out',
-            i === current
-              ? 'opacity-100 scale-100'
-              : 'opacity-0 scale-105'
+            'absolute inset-0 transition-opacity duration-[1200ms] ease-out',
+            i === current ? 'opacity-100' : 'opacity-0'
           )}
-          style={{ backgroundImage: `url(${slide.image})` }}
-        />
+        >
+          <div
+            className={clsx(
+              'absolute inset-0 bg-cover bg-center',
+              i === current && 'animate-ken-burns'
+            )}
+            style={{ backgroundImage: `url(${slide.image})` }}
+          />
+        </div>
       ))}
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-slate-900/30" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-slate-950/70 to-transparent" />
 
       {/* ---------------- CONTENT ---------------- */}
-      <div className="relative z-10 mx-auto grid h-full max-w-7xl grid-cols-12 px-6">
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-12 px-6 pt-24 md:h-full md:pt-0">
         {/* LEFT TEXT */}
-        <div className="col-span-12 flex flex-col justify-center md:col-span-7">
-          <span className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-400 animate-fade-in">
+        <div className="col-span-12 flex flex-col justify-center md:col-span-7 lg:pr-12">
+          <span
+            key={`tag-${current}`}
+            className="animate-fade-in mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-blue-400/40 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-300 backdrop-blur-sm"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
             {slides[current].industry}
           </span>
 
           <h1
             key={current}
-            className="max-w-xl text-4xl font-semibold leading-tight text-white md:text-5xl animate-slide-up"
+            className="animate-slide-up max-w-xl text-4xl font-semibold leading-tight text-white md:text-5xl lg:text-6xl"
           >
             {slides[current].title}
           </h1>
 
           <p
             key={`sub-${current}`}
-            className="mt-6 max-w-lg text-lg text-gray-200 animate-slide-up delay-100"
+            className="animate-slide-up delay-100 mt-6 max-w-lg text-lg leading-relaxed text-gray-300"
           >
             {slides[current].subtitle}
           </p>
+
+          {/* CTAs */}
+          <div
+            key={`cta-${current}`}
+            className="animate-slide-up delay-200 mt-10 flex flex-wrap items-center gap-4"
+          >
+            <Link
+              href="/services/applications"
+              className="group inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3 text-sm font-medium text-white shadow-lg shadow-blue-600/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-500/40"
+            >
+              Explore our services
+              <span className="transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-full border border-white/30 px-7 py-3 text-sm font-medium text-white backdrop-blur-sm transition-all duration-300 hover:border-white/60 hover:bg-white/10"
+            >
+              Talk to an expert
+            </Link>
+          </div>
+
+          {/* SLIDE CONTROLS */}
+          <div className="mt-14 hidden items-center gap-6 pb-10 md:flex">
+            {/* Prev / Next */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => goTo(current - 1)}
+                aria-label="Previous slide"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-white transition-all duration-300 hover:border-white hover:bg-white/10"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => goTo(current + 1)}
+                aria-label="Next slide"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-white transition-all duration-300 hover:border-white hover:bg-white/10"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Progress indicators */}
+            <div className="flex items-center gap-3">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  className="group py-2"
+                >
+                  <span
+                    className={clsx(
+                      'relative block h-1 overflow-hidden rounded-full transition-all duration-500',
+                      i === current
+                        ? 'w-14 bg-white/30'
+                        : 'w-8 bg-white/20 group-hover:bg-white/40'
+                    )}
+                  >
+                    {i === current && (
+                      <span
+                        key={current}
+                        className={clsx(
+                          'absolute inset-y-0 left-0 rounded-full bg-blue-400',
+                          interacted ? 'w-full' : 'animate-slide-progress'
+                        )}
+                      />
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <span className="text-sm font-medium tabular-nums text-white/60">
+              {String(current + 1).padStart(2, '0')} /{' '}
+              {String(slides.length).padStart(2, '0')}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* ---------------- STICKY SIDE PANEL (DESKTOP) ---------------- */}
       <aside className="absolute right-0 top-0 z-20 hidden h-full w-[420px] md:block">
-        <div className="sticky top-0 h-full bg-black/65 backdrop-blur">
+        <div className="flex h-full flex-col justify-center border-l border-white/10 bg-slate-950/60 backdrop-blur-md">
           {sidePanels.map((panel, index) => (
             <div
               key={panel.title}
@@ -135,14 +226,17 @@ export default function HeroSection() {
                 onClick={() =>
                   setOpenPanel(openPanel === index ? null : index)
                 }
-                className="flex w-full items-center justify-between px-6 py-5 text-left text-white transition-colors hover:bg-white/5"
+                className={clsx(
+                  'flex w-full items-center justify-between px-8 py-5 text-left text-white transition-colors duration-300',
+                  openPanel === index ? 'bg-white/5' : 'hover:bg-white/5'
+                )}
               >
-                <span className="text-sm font-medium">
+                <span className="pr-4 text-sm font-medium">
                   {panel.title}
                 </span>
                 <span
                   className={clsx(
-                    'text-xl transition-transform duration-300',
+                    'shrink-0 text-xl text-blue-300 transition-transform duration-300',
                     openPanel === index && 'rotate-45'
                   )}
                 >
@@ -152,13 +246,13 @@ export default function HeroSection() {
 
               <div
                 className={clsx(
-                  'overflow-hidden transition-all duration-300',
+                  'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
                   openPanel === index
-                    ? 'max-h-40 px-6 pb-6'
-                    : 'max-h-0 px-6'
+                    ? 'max-h-40 px-8 pb-6'
+                    : 'max-h-0 px-8'
                 )}
               >
-                <p className="text-sm text-gray-300">
+                <p className="text-sm leading-relaxed text-gray-300">
                   {panel.content}
                 </p>
               </div>
@@ -167,36 +261,62 @@ export default function HeroSection() {
         </div>
       </aside>
 
-      {/* ---------------- MOBILE SIDE PANEL ---------------- */}
-      <div className="relative z-10 mt-8 block px-6 md:hidden">
-        <div className="rounded-md bg-black/70 backdrop-blur">
+      {/* ---------------- MOBILE PANELS + CONTROLS ---------------- */}
+      <div className="relative z-10 mt-12 block px-6 pb-10 md:hidden">
+        {/* Mobile slide dots */}
+        <div className="mb-6 flex items-center justify-center gap-3">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={clsx(
+                'h-1.5 rounded-full transition-all duration-500',
+                i === current ? 'w-8 bg-blue-400' : 'w-3 bg-white/30'
+              )}
+            />
+          ))}
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950/70 backdrop-blur-md">
           {sidePanels.map((panel, index) => (
-            <div key={panel.title} className="border-b border-white/10">
+            <div
+              key={panel.title}
+              className="border-b border-white/10 last:border-none"
+            >
               <button
                 onClick={() =>
                   setOpenPanel(openPanel === index ? null : index)
                 }
-                className="flex w-full items-center justify-between px-4 py-4 text-left text-white"
+                className="flex w-full items-center justify-between px-5 py-4 text-left text-white"
               >
-                <span className="text-sm font-medium">
+                <span className="pr-4 text-sm font-medium">
                   {panel.title}
                 </span>
-                <span className="text-xl">
-                  {openPanel === index ? '−' : '+'}
+                <span
+                  className={clsx(
+                    'shrink-0 text-xl text-blue-300 transition-transform duration-300',
+                    openPanel === index && 'rotate-45'
+                  )}
+                >
+                  +
                 </span>
               </button>
 
-              {openPanel === index && (
-                <div className="px-4 pb-4 text-sm text-gray-300">
+              <div
+                className={clsx(
+                  'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                  openPanel === index ? 'max-h-40 px-5 pb-5' : 'max-h-0 px-5'
+                )}
+              >
+                <p className="text-sm leading-relaxed text-gray-300">
                   {panel.content}
-                </div>
-              )}
+                </p>
+              </div>
             </div>
           ))}
         </div>
       </div>
-
-    
     </section>
   )
 }
